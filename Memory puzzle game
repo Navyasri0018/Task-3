@@ -1,0 +1,103 @@
+import random
+import time
+
+def display_board(board, revealed):
+    """
+    Display the board with revealed and hidden cards.
+    """
+    print("\nBoard:")
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            if revealed[i][j]:
+                print(f"{board[i][j]:2}", end=" ")
+            else:
+                print(" *", end=" ")
+        print()
+    print()
+
+
+def create_board(size):
+    """
+    Create a shuffled board of card pairs.
+    """
+    if size % 2 != 0:
+        raise ValueError("The board size must be an even number.")
+    cards = [i for i in range(1, size // 2 + 1)] * 2  # Create pairs of cards
+    random.shuffle(cards)
+    return [cards[i:i + int(size ** 0.5)] for i in range(0, size, int(size ** 0.5))]
+
+
+def get_user_input(board_size):
+    """
+    Get valid input for selecting a card from the user.
+    """
+    while True:
+        try:
+            row, col = map(int, input("Enter row and column (e.g., 0 1): ").split())
+            if 0 <= row < board_size and 0 <= col < board_size:
+                return row, col
+            else:
+                print(f"Invalid input. Enter numbers between 0 and {board_size - 1}.")
+        except ValueError:
+            print("Invalid input. Please enter two numbers separated by a space.")
+
+
+def play_game():
+    """
+    Main function to play the Memory Puzzle Game.
+    """
+    print("Welcome to the Memory Puzzle Game!")
+    board_size = 4  # 4x4 board (can be changed to 6x6 or larger for more challenge)
+    time_limit = 60  # Time limit in seconds
+
+    # Create board and initialize revealed status
+    board = create_board(board_size * board_size)
+    revealed = [[False] * board_size for _ in range(board_size)]
+
+    pairs_found = 0
+    total_pairs = (board_size * board_size) // 2
+
+    start_time = time.time()
+    while pairs_found < total_pairs:
+        # Display the board
+        display_board(board, revealed)
+
+        # Check for time limit
+        if time.time() - start_time > time_limit:
+            print("\nTime's up! You lose!")
+            return
+
+        # Player selects the first card
+        print("Select the first card:")
+        row1, col1 = get_user_input(board_size)
+        while revealed[row1][col1]:
+            print("Card already revealed. Choose another card.")
+            row1, col1 = get_user_input(board_size)
+
+        revealed[row1][col1] = True
+        display_board(board, revealed)
+
+        # Player selects the second card
+        print("Select the second card:")
+        row2, col2 = get_user_input(board_size)
+        while revealed[row2][col2] or (row1 == row2 and col1 == col2):
+            print("Invalid choice. Choose another card.")
+            row2, col2 = get_user_input(board_size)
+
+        revealed[row2][col2] = True
+        display_board(board, revealed)
+
+        # Check if the cards match
+        if board[row1][col1] == board[row2][col2]:
+            print("It's a match!")
+            pairs_found += 1
+        else:
+            print("Not a match. Try again!")
+            time.sleep(1)  # Pause for a moment before hiding the cards again
+            revealed[row1][col1] = False
+            revealed[row2][col2] = False
+
+    print("\nCongratulations! You found all the pairs!")
+
+if _name_ == "_main_":
+    play_game()
